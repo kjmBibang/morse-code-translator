@@ -11,6 +11,7 @@ from core import translate
 from core.telegraph import TelegraphSession
 from core.tree import MORSE_TABLE
 from ui.visualizer import MorseTreeVisualizer
+from ui.history import HistoryWindow, save_history
 
 
 class MorseApp(ctk.CTk):
@@ -35,6 +36,7 @@ class MorseApp(ctk.CTk):
 		self.audio_tab = self.tabview.add("Audio")
 
 		self.telegraph_session = TelegraphSession()
+		self._history_window: HistoryWindow | None = None
 
 		self._build_encoder_tab()
 		self._build_decoder_tab()
@@ -86,9 +88,10 @@ class MorseApp(ctk.CTk):
 		self.encoder_input = ctk.CTkTextbox(left_frame, height=120)
 		self.encoder_input.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
 
-		ctk.CTkButton(left_frame, text="Encode", command=self._on_encode).grid(
-			row=2, column=0, sticky="w", padx=10, pady=(0, 10)
-		)
+		encode_btn_frame = ctk.CTkFrame(left_frame, fg_color="transparent")
+		encode_btn_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 10))
+		ctk.CTkButton(encode_btn_frame, text="Encode", command=self._on_encode).grid(row=0, column=0, sticky="w")
+		ctk.CTkButton(encode_btn_frame, text="History", width=90, command=self._open_history).grid(row=0, column=1, sticky="w", padx=(8, 0))
 
 		output_header = ctk.CTkFrame(left_frame, fg_color="transparent")
 		output_header.grid(row=3, column=0, sticky="ew", padx=10, pady=(10, 4))
@@ -158,9 +161,10 @@ class MorseApp(ctk.CTk):
 		self.decoder_input = ctk.CTkTextbox(left_frame, height=120)
 		self.decoder_input.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
 
-		ctk.CTkButton(left_frame, text="Decode", command=self._on_decode).grid(
-			row=2, column=0, sticky="w", padx=10, pady=(0, 10)
-		)
+		decode_btn_frame = ctk.CTkFrame(left_frame, fg_color="transparent")
+		decode_btn_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 10))
+		ctk.CTkButton(decode_btn_frame, text="Decode", command=self._on_decode).grid(row=0, column=0, sticky="w")
+		ctk.CTkButton(decode_btn_frame, text="History", width=90, command=self._open_history).grid(row=0, column=1, sticky="w", padx=(8, 0))
 
 		ctk.CTkLabel(left_frame, text="Text Output").grid(
 			row=3, column=0, sticky="w", padx=10, pady=(10, 4)
@@ -226,11 +230,13 @@ class MorseApp(ctk.CTk):
 		button_frame.grid_columnconfigure(2, weight=1)
 		button_frame.grid_columnconfigure(3, weight=1)
 		button_frame.grid_columnconfigure(4, weight=1)
+		button_frame.grid_columnconfigure(5, weight=1)
 		ctk.CTkButton(button_frame, text="Left Arrow", command=self._on_telegraph_dot).grid(row=0, column=0, sticky="ew", padx=4)
 		ctk.CTkButton(button_frame, text="Right Arrow", command=self._on_telegraph_dash).grid(row=0, column=1, sticky="ew", padx=4)
 		ctk.CTkButton(button_frame, text="Commit", command=self._on_telegraph_commit).grid(row=0, column=2, sticky="ew", padx=4)
 		ctk.CTkButton(button_frame, text="Space", command=self._on_telegraph_space).grid(row=0, column=3, sticky="ew", padx=4)
 		ctk.CTkButton(button_frame, text="Reset", command=self._on_telegraph_reset).grid(row=0, column=4, sticky="ew", padx=4)
+		ctk.CTkButton(button_frame, text="History", command=self._open_history).grid(row=0, column=5, sticky="ew", padx=4)
 
 		ctk.CTkLabel(left_frame, text="Decoded Text").grid(
 			row=4, column=0, sticky="w", padx=10, pady=(10, 4)
@@ -279,7 +285,41 @@ class MorseApp(ctk.CTk):
 		self._refresh_telegraph_state()
 		return "break"
 
+	def _open_history(self) -> None:
+		"""Open (or re-raise) the history popup."""
+		if self._history_window is not None and self._history_window.winfo_exists():
+			self._history_window.deiconify()
+			self._history_window.lift()
+			self._history_window._refresh_history()
+			return
+		self._history_window = HistoryWindow(master=self, on_use=self._on_history_use)
+
+	def _on_history_use(self, mode: str, input_text: str, output_text: str) -> None:
+		"""Load a history entry's input into the right tab and switch to it."""
+		if mode == "encode":
+			self.tabview.set("Encoder")
+			self.encoder_input.configure(state="normal")
+			self.encoder_input.delete("1.0", "end")
+			self.encoder_input.insert("1.0", input_text)
+		elif mode == "decode":
+			self.tabview.set("Decoder")
+			self.decoder_input.configure(state="normal")
+			self.decoder_input.delete("1.0", "end")
+			self.decoder_input.insert("1.0", input_text)
+		elif mode == "telegraph":
+			self.tabview.set("Telegraph")
+			self.telegraph_session.reset()
+			# Telegraph input is morse symbols — pre-fill the decoded text field
+			# so the user can see what was produced before; current_symbols stays clear.
+			self.telegraph_session.decoded_text = output_text
+			self._refresh_telegraph_state()
+		# audio: reserved for future use
+
 	def _on_telegraph_reset(self) -> None:
+		decoded = self.telegraph_session.decoded_text
+		symbols = self.telegraph_session.current_symbols
+		if decoded or symbols:
+			save_history("telegraph", symbols, decoded)
 		self.telegraph_session.reset()
 		self._refresh_telegraph_state()
 
@@ -599,6 +639,7 @@ class MorseApp(ctk.CTk):
 		result, _ = translate(text, "encode")
 		elapsed = time.perf_counter() - start
 		self._set_text(self.encoder_output, result)
+		save_history("encode", text, result)
 		if self.encoder_visualizer.winfo_ismapped():
 			morse = sanitize_morse_symbols(result)
 			unit_seconds = self._resolve_unit_seconds(elapsed, morse)
@@ -614,6 +655,7 @@ class MorseApp(ctk.CTk):
 		result, _ = translate(text, "decode")
 		elapsed = time.perf_counter() - start
 		self._set_text(self.decoder_output, result)
+		save_history("decode", text, result)
 		if self.decoder_visualizer.winfo_ismapped():
 			morse = sanitize_morse_symbols(text)
 			unit_seconds = self._resolve_unit_seconds(elapsed, morse)
