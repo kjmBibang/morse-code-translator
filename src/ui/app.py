@@ -436,6 +436,7 @@ class MorseApp(ctk.CTk):
 			variable=self.sound_volume_var,
 		)
 
+
 	def _resolve_unit_seconds(self, elapsed_seconds: float, morse: str) -> float:
 		mode = self.animation_speed_var.get()
 		speed_map = {
@@ -678,7 +679,29 @@ class MorseApp(ctk.CTk):
 			self.decoder_visualizer.animate_morse(morse, unit_seconds)
 			self._play_morse_sequence(morse, unit_seconds, None, False)
 
+# ====================START 05-font-size-option=======================
+	def _apply_font_size(self) -> None:
+		"""Apply the selected font size across common widgets."""
+		size_map = {
+			"small": 14,
+			"normal": 20,
+			"large": 26,
+			"xlarge": 32,
+		}
+		size = size_map.get(self.font_size_var.get(), 12)
+		font = ("Consolas", size)
 
+		def _recurse_config(w):
+			try:
+				w.configure(font=font)
+			except Exception:
+				pass
+			for child in w.winfo_children():
+				_recurse_config(child)
+
+		_recurse_config(self)
+
+#===================END=============================
 def run() -> None:
 	app = MorseApp()
 	app.mainloop()
