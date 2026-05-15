@@ -43,6 +43,9 @@ class MorseApp(ctk.CTk):
 		self._build_telegraph_tab()
 		self._build_placeholder_tab(self.audio_tab, "Audio tools coming soon.")
 		self._build_menus()
+# =============START====05-font-size======================
+		self._apply_font_size()
+# ==================END====================================		
 
 		self.bind_all("<Left>", self._on_telegraph_dot, add="+")
 		self.bind_all("<Right>", self._on_telegraph_dash, add="+")
