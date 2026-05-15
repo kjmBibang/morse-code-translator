@@ -374,6 +374,19 @@ class MorseApp(ctk.CTk):
 			command=self._toggle_decoder_guide,
 		)
 
+
+# ======================START 05-font-size-option=================================
+		self.font_size_var = tk.StringVar(value="normal")
+		font_menu = tk.Menu(self.view_menu, tearoff=0)
+		font_menu.add_radiobutton(label="Small", value="small", variable=self.font_size_var, command=self._apply_font_size)
+		font_menu.add_radiobutton(label="Normal", value="normal", variable=self.font_size_var, command=self._apply_font_size)
+		font_menu.add_radiobutton(label="Large", value="large", variable=self.font_size_var, command=self._apply_font_size)
+		font_menu.add_radiobutton(label="Extra Large", value="xlarge", variable=self.font_size_var, command=self._apply_font_size)
+		self.menu_bar.add_cascade(label="Font", menu=font_menu)
+# ===============================END===============================================
+
+
+
 		self.animation_menu.add_radiobutton(
 			label="Slow",
 			value="slow",
