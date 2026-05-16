@@ -43,6 +43,7 @@ class MorseApp(ctk.CTk):
 		self._build_telegraph_tab()
 		self._build_placeholder_tab(self.audio_tab, "Audio tools coming soon.")
 		self._build_menus()
+		self.after(100, self._toggle_telegraph_guide)
 
 		self.bind_all("<Left>", self._on_telegraph_dot, add="+")
 		self.bind_all("<Right>", self._on_telegraph_dash, add="+")
@@ -247,7 +248,9 @@ class MorseApp(ctk.CTk):
 
 		self.telegraph_guide = self._build_morse_guide(self.telegraph_side_inner)
 		self.telegraph_guide.grid(row=0, column=0, sticky="nsew", padx=4, pady=4)
-
+		self.telegraph_guide.grid_remove() 
+		self.telegraph_panels = [self.telegraph_guide]
+		self.telegraph_pane.forget(self.telegraph_side) 
 		self._refresh_telegraph_state()
 
 	def _refresh_telegraph_state(self) -> None:
@@ -348,6 +351,7 @@ class MorseApp(ctk.CTk):
 		self.animation_speed_var = tk.StringVar(value="normal")
 		self.sound_enabled_var = tk.BooleanVar(value=True)
 		self.sound_volume_var = tk.IntVar(value=75)
+		self.telegraph_guide_var = tk.BooleanVar(value=True)
 
 		self.view_menu.add_checkbutton(
 			label="Encoder: Visualizer",
@@ -369,6 +373,13 @@ class MorseApp(ctk.CTk):
 			label="Decoder: Guide",
 			variable=self.decoder_guide_var,
 			command=self._toggle_decoder_guide,
+		)
+
+		self.view_menu.add_separator()
+		self.view_menu.add_checkbutton(
+			label="Telegraph: Guide",
+			variable=self.telegraph_guide_var,
+			command=self._toggle_telegraph_guide,
 		)
 
 		self.animation_menu.add_radiobutton(
@@ -594,6 +605,16 @@ class MorseApp(ctk.CTk):
 			self.decoder_guide_var.get(),
 		)
 		self._sync_menu_var(self.decoder_guide_var, self.decoder_guide)
+
+	def _toggle_telegraph_guide(self) -> None:
+		self._set_panel_visibility(
+			self.telegraph_pane,
+			self.telegraph_side,
+			self.telegraph_guide,
+			self.telegraph_panels,
+			self.telegraph_guide_var.get(),
+		)
+		self._sync_menu_var(self.telegraph_guide_var, self.telegraph_guide)
 
 	def _build_morse_guide(self, parent: ctk.CTkFrame) -> ctk.CTkFrame:
 		frame = ctk.CTkFrame(parent)
