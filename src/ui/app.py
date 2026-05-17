@@ -47,6 +47,7 @@ class MorseApp(ctk.CTk):
 		self._build_telegraph_tab()
 		self._build_placeholder_tab(self.audio_tab, "Audio tools coming soon.")
 		self._build_menus()
+		self.after(100, self._toggle_telegraph_guide)
 # =============START====05-font-size======================
 		self._apply_font_size()
 # ==================END====================================		
@@ -324,6 +325,8 @@ class MorseApp(ctk.CTk):
 		).grid(row=3, column=1, columnspan=2, sticky="ew", padx=5, pady=(5, 8))
 # ==================END====================================
 
+		self.telegraph_panels = [self.telegraph_guide, self.telegraph_controls_frame]
+
 		self._refresh_telegraph_state()
 
 	def _refresh_telegraph_state(self) -> None:
@@ -446,6 +449,12 @@ class MorseApp(ctk.CTk):
 			label="Decoder: Guide",
 			variable=self.decoder_guide_var,
 			command=self._toggle_decoder_guide,
+		)
+		self.view_menu.add_separator()
+		self.view_menu.add_checkbutton(
+			label="Telegraph: Guide",
+			variable=self.telegraph_guide_var,
+			command=self._toggle_telegraph_guide,
 		)
 
 
