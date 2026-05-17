@@ -13,6 +13,10 @@ from core.tree import MORSE_TABLE
 from ui.visualizer import MorseTreeVisualizer
 from ui.history import HistoryWindow, save_history
 
+# =============START====07-telegraph-ui-layout======================
+# No new imports needed for the Telegraph UI layout update.
+# ==================END====================================
+
 
 class MorseApp(ctk.CTk):
 	def __init__(self) -> None:
@@ -43,7 +47,9 @@ class MorseApp(ctk.CTk):
 		self._build_telegraph_tab()
 		self._build_placeholder_tab(self.audio_tab, "Audio tools coming soon.")
 		self._build_menus()
-		self.after(100, self._toggle_telegraph_guide)
+# =============START====05-font-size======================
+		self._apply_font_size()
+# ==================END====================================		
 
 		self.bind_all("<Left>", self._on_telegraph_dot, add="+")
 		self.bind_all("<Right>", self._on_telegraph_dash, add="+")
@@ -198,8 +204,13 @@ class MorseApp(ctk.CTk):
 
 		left_frame = ctk.CTkFrame(self.telegraph_pane, fg_color="transparent")
 		left_frame.grid_columnconfigure(0, weight=1)
-		left_frame.grid_rowconfigure(2, weight=1)
-		left_frame.grid_rowconfigure(5, weight=1)
+
+# =============START====07-telegraph-ui-layout======================
+		# Changed row weights because the instruction label and left-side button row were removed.
+		# Current Morse Symbols now uses row 1, and Decoded Text now uses row 3.
+		left_frame.grid_rowconfigure(1, weight=1)
+		left_frame.grid_rowconfigure(3, weight=1)
+# ==================END====================================
 
 		self.telegraph_side = ctk.CTkFrame(self.telegraph_pane)
 		self.telegraph_side.grid_columnconfigure(0, weight=1)
@@ -214,43 +225,105 @@ class MorseApp(ctk.CTk):
 		ctk.CTkLabel(left_frame, text="Current Morse Symbols").grid(
 			row=0, column=0, sticky="w", padx=10, pady=(10, 4)
 		)
-		ctk.CTkLabel(
-			left_frame,
-			text="Use Left/Right arrows for dot/dash, Space for word gap, Enter to commit.",
-			text_color="#cccccc",
-			wraplength=700,
-		).grid(row=1, column=0, sticky="w", padx=10, pady=(0, 10))
+
+# =============START====07-telegraph-ui-layout======================
+		# Removed this instruction label from the left panel:
+		# "Use Left/Right arrows for dot/dash, Space for word gap, Enter to commit."
+		# The controls are now shown visually on the right panel under the Morse Guide.
+# ==================END====================================
+
 		self.telegraph_symbols = ctk.CTkTextbox(left_frame, height=80)
-		self.telegraph_symbols.grid(row=2, column=0, sticky="nsew", padx=10, pady=(0, 10))
+
+# =============START====07-telegraph-ui-layout======================
+		# Changed row from 2 to 1 because the instruction label was removed.
+		self.telegraph_symbols.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
+# ==================END====================================
+
 		self._set_text(self.telegraph_symbols, "")
 
-		button_frame = ctk.CTkFrame(left_frame, fg_color="transparent")
-		button_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=(0, 10))
-		button_frame.grid_columnconfigure(0, weight=1)
-		button_frame.grid_columnconfigure(1, weight=1)
-		button_frame.grid_columnconfigure(2, weight=1)
-		button_frame.grid_columnconfigure(3, weight=1)
-		button_frame.grid_columnconfigure(4, weight=1)
-		button_frame.grid_columnconfigure(5, weight=1)
-		ctk.CTkButton(button_frame, text="Left Arrow", command=self._on_telegraph_dot).grid(row=0, column=0, sticky="ew", padx=4)
-		ctk.CTkButton(button_frame, text="Right Arrow", command=self._on_telegraph_dash).grid(row=0, column=1, sticky="ew", padx=4)
-		ctk.CTkButton(button_frame, text="Commit", command=self._on_telegraph_commit).grid(row=0, column=2, sticky="ew", padx=4)
-		ctk.CTkButton(button_frame, text="Space", command=self._on_telegraph_space).grid(row=0, column=3, sticky="ew", padx=4)
-		ctk.CTkButton(button_frame, text="Reset", command=self._on_telegraph_reset).grid(row=0, column=4, sticky="ew", padx=4)
-		ctk.CTkButton(button_frame, text="History", command=self._open_history).grid(row=0, column=5, sticky="ew", padx=4)
+# =============START====07-telegraph-ui-layout======================
+		# Removed the old left-side horizontal button row:
+		# Left Arrow | Right Arrow | Commit | Space | Reset | History
+		#
+		# New telegraph controls are created below the Morse Guide on the right panel.
+# ==================END====================================
 
 		ctk.CTkLabel(left_frame, text="Decoded Text").grid(
-			row=4, column=0, sticky="w", padx=10, pady=(10, 4)
+# =============START====07-telegraph-ui-layout======================
+			# Changed row from 4 to 2 because the old button row was removed.
+			row=2, column=0, sticky="w", padx=10, pady=(10, 4)
+# ==================END====================================
 		)
 		self.telegraph_output = ctk.CTkTextbox(left_frame, height=120)
-		self.telegraph_output.grid(row=5, column=0, sticky="nsew", padx=10, pady=(0, 10))
+
+# =============START====07-telegraph-ui-layout======================
+		# Changed row from 5 to 3 because the old button row was removed.
+		self.telegraph_output.grid(row=3, column=0, sticky="nsew", padx=10, pady=(0, 10))
+# ==================END====================================
+
 		self._set_text(self.telegraph_output, "")
 
 		self.telegraph_guide = self._build_morse_guide(self.telegraph_side_inner)
 		self.telegraph_guide.grid(row=0, column=0, sticky="nsew", padx=4, pady=4)
-		self.telegraph_guide.grid_remove() 
-		self.telegraph_panels = [self.telegraph_guide]
-		self.telegraph_pane.forget(self.telegraph_side) 
+
+# =============START====07-telegraph-ui-layout======================
+		# New right-side Telegraph control panel.
+		# Layout:
+		# [ ← ] [ Enter ] [ → ]
+		# [      Space      ]
+		# [ Reset ] [ History ]
+		self.telegraph_controls_frame = ctk.CTkFrame(self.telegraph_side_inner)
+		self.telegraph_controls_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=(10, 10))
+		self.telegraph_controls_frame.grid_columnconfigure((0, 1, 2), weight=1)
+
+		ctk.CTkLabel(
+			self.telegraph_controls_frame,
+			text="Telegraph Controls",
+		).grid(row=0, column=0, columnspan=3, sticky="w", padx=8, pady=(8, 4))
+
+		ctk.CTkButton(
+			self.telegraph_controls_frame,
+			text="←",
+			height=50,
+			command=self._on_telegraph_dot,
+		).grid(row=1, column=0, sticky="ew", padx=5, pady=5)
+
+		ctk.CTkButton(
+			self.telegraph_controls_frame,
+			text="Enter",
+			height=50,
+			command=self._on_telegraph_commit,
+		).grid(row=1, column=1, sticky="ew", padx=5, pady=5)
+
+		ctk.CTkButton(
+			self.telegraph_controls_frame,
+			text="→",
+			height=50,
+			command=self._on_telegraph_dash,
+		).grid(row=1, column=2, sticky="ew", padx=5, pady=5)
+
+		ctk.CTkButton(
+			self.telegraph_controls_frame,
+			text="Space",
+			height=50,
+			command=self._on_telegraph_space,
+		).grid(row=2, column=0, columnspan=3, sticky="ew", padx=5, pady=5)
+
+		ctk.CTkButton(
+			self.telegraph_controls_frame,
+			text="Reset",
+			height=45,
+			command=self._on_telegraph_reset,
+		).grid(row=3, column=0, sticky="ew", padx=5, pady=(5, 8))
+
+		ctk.CTkButton(
+			self.telegraph_controls_frame,
+			text="History",
+			height=45,
+			command=self._open_history,
+		).grid(row=3, column=1, columnspan=2, sticky="ew", padx=5, pady=(5, 8))
+# ==================END====================================
+
 		self._refresh_telegraph_state()
 
 	def _refresh_telegraph_state(self) -> None:
@@ -375,12 +448,18 @@ class MorseApp(ctk.CTk):
 			command=self._toggle_decoder_guide,
 		)
 
-		self.view_menu.add_separator()
-		self.view_menu.add_checkbutton(
-			label="Telegraph: Guide",
-			variable=self.telegraph_guide_var,
-			command=self._toggle_telegraph_guide,
-		)
+
+# ======================START 05-font-size-option=================================
+		self.font_size_var = tk.StringVar(value="normal")
+		font_menu = tk.Menu(self.view_menu, tearoff=0)
+		font_menu.add_radiobutton(label="Small", value="small", variable=self.font_size_var, command=self._apply_font_size)
+		font_menu.add_radiobutton(label="Normal", value="normal", variable=self.font_size_var, command=self._apply_font_size)
+		font_menu.add_radiobutton(label="Large", value="large", variable=self.font_size_var, command=self._apply_font_size)
+		font_menu.add_radiobutton(label="Extra Large", value="xlarge", variable=self.font_size_var, command=self._apply_font_size)
+		self.menu_bar.add_cascade(label="Font", menu=font_menu)
+# ===============================END===============================================
+
+
 
 		self.animation_menu.add_radiobutton(
 			label="Slow",
@@ -430,6 +509,7 @@ class MorseApp(ctk.CTk):
 			value=100,
 			variable=self.sound_volume_var,
 		)
+
 
 	def _resolve_unit_seconds(self, elapsed_seconds: float, morse: str) -> float:
 		mode = self.animation_speed_var.get()
@@ -619,28 +699,41 @@ class MorseApp(ctk.CTk):
 	def _build_morse_guide(self, parent: ctk.CTkFrame) -> ctk.CTkFrame:
 		frame = ctk.CTkFrame(parent)
 		frame.grid_columnconfigure(0, weight=1)
-		frame.grid_rowconfigure(1, weight=1)
+
+# =============START====07-telegraph-ui-layout======================
+		# Changed Morse Guide from CTkTextbox to CTkLabel so the full guide is visible
+		# without the textbox scrollbar/dropdown-style scroll area.
 		ctk.CTkLabel(frame, text="Morse Guide").grid(
 			row=0, column=0, sticky="w", padx=10, pady=(10, 4)
 		)
-		textbox = ctk.CTkTextbox(frame)
-		textbox.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
-		textbox.insert("1.0", self._format_morse_guide())
-		textbox.configure(state="disabled", font=("Consolas", 12))
+
+		guide_label = ctk.CTkLabel(
+			frame,
+			text=self._format_morse_guide(),
+			font=("Consolas", 12),
+			justify="left",
+			anchor="w",
+		)
+		guide_label.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 10))
+# ==================END====================================
+
 		return frame
 
 	def _format_morse_guide(self) -> str:
+# =============START====07-telegraph-ui-layout======================
+		# Keep the Morse Guide compact enough to show fully without a scrollbar.
 		entries = [f"{char} {code}" for char, code in MORSE_TABLE.items()]
 		lines = []
 		row = []
 		for entry in entries:
-			row.append(entry.ljust(10))
+			row.append(entry.ljust(8))
 			if len(row) == 4:
 				lines.append("  ".join(row).rstrip())
 				row = []
 		if row:
 			lines.append("  ".join(row).rstrip())
 		return "\n".join(lines)
+# ==================END====================================
 
 	def _get_text(self, textbox: ctk.CTkTextbox) -> str:
 		return textbox.get("1.0", "end").strip()
@@ -683,7 +776,29 @@ class MorseApp(ctk.CTk):
 			self.decoder_visualizer.animate_morse(morse, unit_seconds)
 			self._play_morse_sequence(morse, unit_seconds, None, False)
 
+# ====================START 05-font-size-option=======================
+	def _apply_font_size(self) -> None:
+		"""Apply the selected font size across common widgets."""
+		size_map = {
+			"small": 14,
+			"normal": 20,
+			"large": 26,
+			"xlarge": 32,
+		}
+		size = size_map.get(self.font_size_var.get(), 12)
+		font = ("Consolas", size)
 
+		def _recurse_config(w):
+			try:
+				w.configure(font=font)
+			except Exception:
+				pass
+			for child in w.winfo_children():
+				_recurse_config(child)
+
+		_recurse_config(self)
+
+#===================END=============================
 def run() -> None:
 	app = MorseApp()
 	app.mainloop()
