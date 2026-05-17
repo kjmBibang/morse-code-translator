@@ -424,6 +424,7 @@ class MorseApp(ctk.CTk):
 		self.animation_speed_var = tk.StringVar(value="normal")
 		self.sound_enabled_var = tk.BooleanVar(value=True)
 		self.sound_volume_var = tk.IntVar(value=75)
+		self.telegraph_guide_var = tk.BooleanVar(value=True)
 
 		self.view_menu.add_checkbutton(
 			label="Encoder: Visualizer",
@@ -684,6 +685,16 @@ class MorseApp(ctk.CTk):
 			self.decoder_guide_var.get(),
 		)
 		self._sync_menu_var(self.decoder_guide_var, self.decoder_guide)
+
+	def _toggle_telegraph_guide(self) -> None:
+		self._set_panel_visibility(
+			self.telegraph_pane,
+			self.telegraph_side,
+			self.telegraph_guide,
+			self.telegraph_panels,
+			self.telegraph_guide_var.get(),
+		)
+		self._sync_menu_var(self.telegraph_guide_var, self.telegraph_guide)
 
 	def _build_morse_guide(self, parent: ctk.CTkFrame) -> ctk.CTkFrame:
 		frame = ctk.CTkFrame(parent)
