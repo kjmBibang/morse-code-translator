@@ -603,6 +603,7 @@ class MorseApp(ctk.CTk):
 		panel: ctk.CTkFrame,
 		panels: list[ctk.CTkFrame],
 		visible: bool,
+		side_visible: bool | None = None,
 	) -> None:
 		if visible:
 			self._ensure_side_pane(pane, side_frame, True)
@@ -610,7 +611,7 @@ class MorseApp(ctk.CTk):
 		else:
 			panel.grid_remove()
 
-		self._sync_side_panel(pane, side_frame, panels, force_visible=visible)
+		self._sync_side_panel(pane, side_frame, panels, force_visible=side_visible)
 
 	def _sync_side_panel(
 		self,
@@ -620,9 +621,10 @@ class MorseApp(ctk.CTk):
 		force_visible: bool | None = None,
 	) -> None:
 		self.update_idletasks()
-		any_visible = any(panel.winfo_ismapped() for panel in panels)
-		if force_visible is True:
-			any_visible = True
+		if force_visible is None:
+			any_visible = any(panel.winfo_ismapped() for panel in panels)
+		else:
+			any_visible = force_visible
 		self._ensure_side_pane(pane, side_frame, any_visible)
 
 	def _sync_menu_var(self, var: tk.BooleanVar, panel: ctk.CTkFrame) -> None:
@@ -652,46 +654,54 @@ class MorseApp(ctk.CTk):
 		pane.sash_place(0, int(width * ratio), 0)
 
 	def _toggle_encoder_visual(self) -> None:
+		side_visible = self.encoder_visual_var.get() or self.encoder_guide_var.get()
 		self._set_panel_visibility(
 			self.encoder_pane,
 			self.encoder_side,
 			self.encoder_visualizer,
 			self.encoder_panels,
 			self.encoder_visual_var.get(),
+			side_visible,
 		)
 		self._sync_menu_var(self.encoder_visual_var, self.encoder_visualizer)
 		if self.encoder_visualizer.winfo_ismapped():
 			self._stop_audio()
 
 	def _toggle_encoder_guide(self) -> None:
+		side_visible = self.encoder_visual_var.get() or self.encoder_guide_var.get()
 		self._set_panel_visibility(
 			self.encoder_pane,
 			self.encoder_side,
 			self.encoder_guide,
 			self.encoder_panels,
 			self.encoder_guide_var.get(),
+			side_visible,
 		)
 		self._sync_menu_var(self.encoder_guide_var, self.encoder_guide)
 
 	def _toggle_decoder_visual(self) -> None:
+		side_visible = self.decoder_visual_var.get() or self.decoder_guide_var.get()
 		self._set_panel_visibility(
 			self.decoder_pane,
 			self.decoder_side,
 			self.decoder_visualizer,
 			self.decoder_panels,
 			self.decoder_visual_var.get(),
+			side_visible,
 		)
 		self._sync_menu_var(self.decoder_visual_var, self.decoder_visualizer)
 		if self.decoder_visualizer.winfo_ismapped():
 			self._stop_audio()
 
 	def _toggle_decoder_guide(self) -> None:
+		side_visible = self.decoder_visual_var.get() or self.decoder_guide_var.get()
 		self._set_panel_visibility(
 			self.decoder_pane,
 			self.decoder_side,
 			self.decoder_guide,
 			self.decoder_panels,
 			self.decoder_guide_var.get(),
+			side_visible,
 		)
 		self._sync_menu_var(self.decoder_guide_var, self.decoder_guide)
 
