@@ -711,7 +711,7 @@ class MorseApp(ctk.CTk):
 		)
 		self._sync_menu_var(self.telegraph_guide_var, self.telegraph_guide)
 
-	def _build_morse_guide(self, parent: ctk.CTkFrame) -> ctk.CTkFrame:
+	def _build_morse_guide(self, parent: tk.Misc) -> ctk.CTkFrame:
 		frame = ctk.CTkFrame(parent)
 		frame.grid_columnconfigure(0, weight=1)
 
