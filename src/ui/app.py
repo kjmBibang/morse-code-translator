@@ -485,6 +485,11 @@ class MorseApp(ctk.CTk):
 			value="fast",
 			variable=self.animation_speed_var,
 		)
+		self.animation_menu.add_radiobutton(
+			label="Extra fast",
+			value="extra_fast",
+			variable=self.animation_speed_var,
+		)
 		self.animation_menu.add_separator()
 		self.animation_menu.add_radiobutton(
 			label="Real-time",
@@ -527,11 +532,13 @@ class MorseApp(ctk.CTk):
 			"normal": 0.35,
 			"fast": 0.18,
 		}
-		if mode == "realtime":
+		if mode == "extra_fast":
 			symbols = sum(1 for ch in morse if ch in ".-")
 			if symbols <= 0:
 				return 0.08
 			return max(0.02, elapsed_seconds / symbols)
+		if mode == "realtime":
+			return 0.0
 		return speed_map.get(mode, 0.35)
 
 	def _get_volume(self) -> float:
