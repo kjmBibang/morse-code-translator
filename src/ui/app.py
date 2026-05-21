@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import time
 import tkinter as tk
+from tkinter import filedialog
 from typing import Optional
 
 import customtkinter as ctk
 
 from audio.beeper import build_morse_wave, play_wave, sanitize_morse_symbols, stop_playback
+from audio.processor import decode_audio_file
 from core import translate
 from core.telegraph import TelegraphSession
 from core.tree import MORSE_TABLE
@@ -41,11 +43,12 @@ class MorseApp(ctk.CTk):
 
 		self.telegraph_session = TelegraphSession()
 		self._history_window: HistoryWindow | None = None
+		self._audio_file_path: Optional[str] = None
 
 		self._build_encoder_tab()
 		self._build_decoder_tab()
 		self._build_telegraph_tab()
-		self._build_placeholder_tab(self.audio_tab, "Audio tools coming soon.")
+		self._build_audio_tab()
 		self._build_menus()
 		self.after(100, self._toggle_telegraph_guide)
 # =============START====05-font-size======================
@@ -329,6 +332,43 @@ class MorseApp(ctk.CTk):
 
 		self._refresh_telegraph_state()
 
+	def _build_audio_tab(self) -> None:
+		self.audio_tab.grid_columnconfigure(0, weight=1)
+		self.audio_tab.grid_rowconfigure(4, weight=1)
+
+		header = ctk.CTkFrame(self.audio_tab, fg_color="transparent")
+		header.grid(row=0, column=0, sticky="ew", padx=10, pady=(10, 6))
+		header.grid_columnconfigure(1, weight=1)
+
+		ctk.CTkLabel(header, text="Audio File").grid(row=0, column=0, sticky="w")
+		ctk.CTkButton(
+			header,
+			text="Open Audio",
+			command=self._open_audio_file,
+		).grid(row=0, column=1, sticky="e")
+
+		self.audio_path_var = tk.StringVar(value="No file selected.")
+		self.audio_path_label = ctk.CTkLabel(header, textvariable=self.audio_path_var, anchor="w")
+		self.audio_path_label.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(4, 0))
+
+		actions = ctk.CTkFrame(self.audio_tab, fg_color="transparent")
+		actions.grid(row=1, column=0, sticky="w", padx=10, pady=(0, 6))
+		ctk.CTkButton(actions, text="Decode", command=self._on_audio_decode).grid(
+			row=0, column=0, sticky="w"
+		)
+
+		ctk.CTkLabel(
+			self.audio_tab,
+			text="Audio is converted to dots and dashes, then decoded with the core translator.",
+		).grid(row=2, column=0, sticky="w", padx=10, pady=(0, 6))
+
+		ctk.CTkLabel(self.audio_tab, text="Decoded Text").grid(
+			row=3, column=0, sticky="w", padx=10, pady=(10, 4)
+		)
+		self.audio_output = ctk.CTkTextbox(self.audio_tab, height=160)
+		self.audio_output.grid(row=4, column=0, sticky="nsew", padx=10, pady=(0, 10))
+		self._set_text(self.audio_output, "")
+
 	def _refresh_telegraph_state(self) -> None:
 		self._set_text(self.telegraph_symbols, self.telegraph_session.current_symbols)
 		self._set_text(self.telegraph_output, self.telegraph_session.decoded_text)
@@ -392,7 +432,10 @@ class MorseApp(ctk.CTk):
 			# so the user can see what was produced before; current_symbols stays clear.
 			self.telegraph_session.decoded_text = output_text
 			self._refresh_telegraph_state()
-		# audio: reserved for future use
+		elif mode == "audio":
+			self.tabview.set("Audio")
+			self.audio_path_var.set("History entry")
+			self._set_text(self.audio_output, output_text)
 
 	def _on_telegraph_reset(self) -> None:
 		decoded = self.telegraph_session.decoded_text
@@ -418,6 +461,7 @@ class MorseApp(ctk.CTk):
 		self.menu_bar.add_cascade(label="Sound", menu=self.sound_menu)
 		self.config(menu=self.menu_bar)
 
+		file_menu.add_command(label="Open Audio...", command=self._open_audio_file)
 		file_menu.add_command(label="Exit", command=self.destroy)
 
 		self.encoder_visual_var = tk.BooleanVar(value=False)
@@ -790,6 +834,33 @@ class MorseApp(ctk.CTk):
 			unit_seconds = self._resolve_unit_seconds(elapsed, morse)
 			self.decoder_visualizer.animate_morse(morse, unit_seconds)
 			self._play_morse_sequence(morse, unit_seconds, None, False)
+
+	def _open_audio_file(self) -> None:
+		path = filedialog.askopenfilename(
+			title="Open Audio",
+			filetypes=[("WAV files", "*.wav"), ("All files", "*.*")],
+		)
+		if not path:
+			return
+		self._audio_file_path = path
+		self.audio_path_var.set(path)
+		self.tabview.set("Audio")
+
+	def _on_audio_decode(self) -> None:
+		if not self._audio_file_path:
+			self._set_text(self.audio_output, "Select a WAV file to decode.")
+			return
+		try:
+			morse = decode_audio_file(self._audio_file_path)
+		except Exception as exc:
+			self._set_text(self.audio_output, f"Audio decode failed: {exc}")
+			return
+		if not morse:
+			self._set_text(self.audio_output, "No Morse detected.")
+			return
+		result, _ = translate(morse, "decode")
+		self._set_text(self.audio_output, result)
+		save_history("audio", morse, result)
 
 # ====================START 05-font-size-option=======================
 	def _apply_font_size(self) -> None:
