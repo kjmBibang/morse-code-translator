@@ -491,11 +491,6 @@ class MorseApp(ctk.CTk):
 			variable=self.animation_speed_var,
 		)
 		self.animation_menu.add_separator()
-		self.animation_menu.add_radiobutton(
-			label="Real-time",
-			value="realtime",
-			variable=self.animation_speed_var,
-		)
 
 		self.sound_menu.add_checkbutton(
 			label="Enable sound",
@@ -537,8 +532,6 @@ class MorseApp(ctk.CTk):
 			if symbols <= 0:
 				return 0.08
 			return max(0.02, elapsed_seconds / symbols)
-		if mode == "realtime":
-			return 0.0
 		return speed_map.get(mode, 0.35)
 
 	def _get_volume(self) -> float:

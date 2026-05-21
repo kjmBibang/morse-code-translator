@@ -165,19 +165,13 @@ class MorseTreeVisualizer(ctk.CTkFrame):
 
 	def animate_morse(self, morse: str, unit_seconds: float) -> None:
 		self.reset()
-		min_unit_ms = 1 if unit_seconds <= 0 else 10
-		steps = self._build_steps(morse, unit_seconds, min_unit_ms=min_unit_ms)
+		steps = self._build_steps(morse, unit_seconds)
 		if not steps:
 			return
 		self._run_steps(0, steps)
 
-	def _build_steps(
-		self,
-		morse: str,
-		unit_seconds: float,
-		min_unit_ms: int = 10,
-	) -> List[Tuple[str, Tuple[int, int, bool], int]]:
-		unit_ms = max(min_unit_ms, int(unit_seconds * 1000))
+	def _build_steps(self, morse: str, unit_seconds: float) -> List[Tuple[str, Tuple[int, int, bool], int]]:
+		unit_ms = max(10, int(unit_seconds * 1000))
 		dot_ms = unit_ms
 		dash_ms = unit_ms * 3
 		intra_gap = unit_ms
