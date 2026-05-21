@@ -47,6 +47,7 @@ class MorseApp(ctk.CTk):
 		self._build_telegraph_tab()
 		self._build_placeholder_tab(self.audio_tab, "Audio tools coming soon.")
 		self._build_menus()
+		self.after(100, self._toggle_telegraph_guide)
 # =============START====05-font-size======================
 		self._apply_font_size()
 # ==================END====================================		
@@ -324,6 +325,8 @@ class MorseApp(ctk.CTk):
 		).grid(row=3, column=1, columnspan=2, sticky="ew", padx=5, pady=(5, 8))
 # ==================END====================================
 
+		self.telegraph_panels = [self.telegraph_guide, self.telegraph_controls_frame]
+
 		self._refresh_telegraph_state()
 
 	def _refresh_telegraph_state(self) -> None:
@@ -447,6 +450,12 @@ class MorseApp(ctk.CTk):
 			variable=self.decoder_guide_var,
 			command=self._toggle_decoder_guide,
 		)
+		self.view_menu.add_separator()
+		self.view_menu.add_checkbutton(
+			label="Telegraph: Guide",
+			variable=self.telegraph_guide_var,
+			command=self._toggle_telegraph_guide,
+		)
 
 
 # ======================START 05-font-size-option=================================
@@ -476,12 +485,12 @@ class MorseApp(ctk.CTk):
 			value="fast",
 			variable=self.animation_speed_var,
 		)
-		self.animation_menu.add_separator()
 		self.animation_menu.add_radiobutton(
-			label="Real-time",
-			value="realtime",
+			label="Extra fast",
+			value="extra_fast",
 			variable=self.animation_speed_var,
 		)
+		self.animation_menu.add_separator()
 
 		self.sound_menu.add_checkbutton(
 			label="Enable sound",
@@ -518,7 +527,7 @@ class MorseApp(ctk.CTk):
 			"normal": 0.35,
 			"fast": 0.18,
 		}
-		if mode == "realtime":
+		if mode == "extra_fast":
 			symbols = sum(1 for ch in morse if ch in ".-")
 			if symbols <= 0:
 				return 0.08
@@ -594,6 +603,7 @@ class MorseApp(ctk.CTk):
 		panel: ctk.CTkFrame,
 		panels: list[ctk.CTkFrame],
 		visible: bool,
+		side_visible: bool | None = None,
 	) -> None:
 		if visible:
 			self._ensure_side_pane(pane, side_frame, True)
@@ -601,7 +611,8 @@ class MorseApp(ctk.CTk):
 		else:
 			panel.grid_remove()
 
-		self._sync_side_panel(pane, side_frame, panels, force_visible=visible)
+		self._sync_side_panel(pane, side_frame, panels, force_visible=side_visible)
+		self.after_idle(lambda: self._sync_side_panel(pane, side_frame, panels))
 
 	def _sync_side_panel(
 		self,
@@ -611,9 +622,10 @@ class MorseApp(ctk.CTk):
 		force_visible: bool | None = None,
 	) -> None:
 		self.update_idletasks()
-		any_visible = any(panel.winfo_ismapped() for panel in panels)
-		if force_visible is True:
-			any_visible = True
+		if force_visible is None:
+			any_visible = any(panel.winfo_ismapped() for panel in panels)
+		else:
+			any_visible = force_visible
 		self._ensure_side_pane(pane, side_frame, any_visible)
 
 	def _sync_menu_var(self, var: tk.BooleanVar, panel: ctk.CTkFrame) -> None:
@@ -632,8 +644,11 @@ class MorseApp(ctk.CTk):
 		if show and side_name not in panes:
 			pane.add(side_frame, minsize=280)
 			self.after(50, lambda: self._set_pane_ratio(pane, 0.6))
-		elif not show and side_name in panes:
-			pane.forget(side_frame)
+		elif not show:
+			try:
+				pane.forget(side_frame)
+			except tk.TclError:
+				pass
 
 	def _set_pane_ratio(self, pane: tk.PanedWindow, ratio: float) -> None:
 		width = pane.winfo_width()
@@ -696,7 +711,7 @@ class MorseApp(ctk.CTk):
 		)
 		self._sync_menu_var(self.telegraph_guide_var, self.telegraph_guide)
 
-	def _build_morse_guide(self, parent: ctk.CTkFrame) -> ctk.CTkFrame:
+	def _build_morse_guide(self, parent: tk.Misc) -> ctk.CTkFrame:
 		frame = ctk.CTkFrame(parent)
 		frame.grid_columnconfigure(0, weight=1)
 

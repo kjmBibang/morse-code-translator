@@ -73,13 +73,14 @@ class HistoryWindow(ctk.CTkToplevel):
     
     def __init__(
         self,
-        master: tk.Misc | None = None,
+        master: tk.Tk | tk.Toplevel | None = None,
         on_use: Callable[[str, str, str], None] | None = None,
     ) -> None:
         super().__init__(master=master)
         self._on_use = on_use
 
-        self.transient(master)
+        if master is not None and isinstance(master, (tk.Tk, tk.Toplevel)):
+            self.transient(master)
         self.attributes("-topmost", True)
         self.title("History")
         self.geometry("760x520")
