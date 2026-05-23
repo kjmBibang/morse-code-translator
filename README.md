@@ -7,7 +7,7 @@
 | Decoder Flowchart | [⬇ Download](https://github.com/kjmBibang/morse-code-translator/raw/main/docs/Documentation%20for%20Morse%20Code%20Translator-Decoder%20flowchart.jpg) |
 | Encoder Flowchart | [⬇ Download](https://github.com/kjmBibang/morse-code-translator/raw/main/docs/Documentation%20for%20Morse%20Code%20Translator-Encoder%20flowchart.jpg) |
 | ERD | [⬇ Download](https://github.com/kjmBibang/morse-code-translator/raw/main/docs/ERD.png) |
-| Paper | [⬇ Download](https://github.com/kjmBibang/morse-code-translator/raw/main/docs/MorseCodeTranslator_Paper.docx) |
+
 | PowerPoint Presentation | [⬇ Download](https://github.com/kjmBibang/morse-code-translator/raw/main/docs/MorseCodeTranslator_Presentation.pptx) |
 
 # Morse Code Translator
