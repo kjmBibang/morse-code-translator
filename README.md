@@ -9,7 +9,8 @@
 | ERD | [⬇ Download](https://github.com/kjmBibang/morse-code-translator/raw/main/docs/ERD.png) |
 | Paper | [⬇ Download](https://github.com/kjmBibang/morse-code-translator/raw/main/docs/MorseCodeTranslator_Paperr.docx) |
 | PowerPoint Presentation | [⬇ Download](https://github.com/kjmBibang/morse-code-translator/raw/main/docs/MorseCodeTranslator_Presentation.pptx) | 
-| Morse Code Translator Presentation | [📂 View Folder](https://drive.google.com/drive/folders/1Kd_gVAwzNrjywStOkZuOetoeUAsDQ-3y?usp=sharing)
+| Morse Code Translator Presentation (Drive) | [📂 View Folder](https://drive.google.com/drive/folders/1Kd_gVAwzNrjywStOkZuOetoeUAsDQ-3y?usp=sharing) |
+| Morse Code Translator Presentation (Youtube) | https://youtu.be/cY3ulkePdac |
 
 # Morse Code Translator
 ## Setup
